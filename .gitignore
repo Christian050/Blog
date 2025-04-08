@@ -1,0 +1,17 @@
+# Build files
+.dist/
+.pytest_cache/
+
+# Django
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+*.log
+
+# IDEs
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
