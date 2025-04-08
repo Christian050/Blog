@@ -2,6 +2,12 @@
 .dist/
 .pytest_cache/
 
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
 # Django
 db.sqlite3
 db.sqlite3-journal
