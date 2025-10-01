@@ -11,9 +11,14 @@
     </a>
 </h2>
 <p class="date">
+    {% comment %} Display publish date and author under title {% endcomment %}
     Published {{ post.publish}} by {{post.author}}
 </p>
+{% comment %} Display first 30 words {% endcomment %}
 {{ post.body|truncatewords:30|linebreaks}}
 {% endfor %}
+
+{% comment %} Include pagination {% endcomment %}
+{% include "pagination.html" with page=page_obj %}
 
 {% endblock %}

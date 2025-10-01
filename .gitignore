@@ -1,6 +1,7 @@
 # Build files
 .dist/
 .pytest_cache/
+*.env
 
 # Python
 __pycache__/
