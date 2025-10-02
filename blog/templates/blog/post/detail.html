@@ -1,32 +1,66 @@
 {% extends 'blog/base.html'%}
-{% block title %}{{post.title}}{% endblock %}
+{% load static %}
 
-{% block content%}
-<h1>{{post.title}}<h1>
-
-{% comment %} Date Published and Author {% endcomment %}
-<p class='date'>Published {{post.publish}} by {{post.author}}</p>
-
-{% comment %} Linebreak {% endcomment %}
-{{ post.body|linebreaks }}
-<p> 
-    <a href="{% url 'blog:post_share' post.id %}">Share this post</a>
-</p>
-
-{% comment %} Display no. of comments {% endcomment %}
-{% with comments.count as total_comments %}
-<h2>{{ total_comments }} Comment{{ total_comments|pluralize }}</h2>
-{% endwith %}
-
-{% for comment in comments %}
-<div class="comment">
-    <p class="info">Comment {{ forloop.counter }} by {{ comment.name }} {{ comment.created }}</p>
-    {{ comment.body|linebreaks }}
-</div>
-
-{% empty %}
-<p>There are no comments.</p>
-{% endfor %}
-
-{% include "blog/post/includes/comment_form.html" %}
+{% block title %} 
+    {{post.title}}
 {% endblock %}
+
+{% block content %}
+
+<div class="row mx-0 px-3">
+    <div class="col-md-8 col-sm-12 p-3">
+        <img src="{% static 'img/7@2x.jpg' %}" alt="Blog image" class="img-fluid mb-4"/>
+        <div class="bg-white p-4 rounded shadow-sm">    
+            <h1>
+                {{post.title}}
+            </h1>
+            <p class='date'>
+                {% comment %} Date Published and Author {% endcomment %}
+                Published {{post.publish}} by {{post.author}}
+            </p>
+            {% comment %} Linebreak {% endcomment %}
+            {{ post.body|linebreaks }}
+                <a class="me-3" href="{% url 'blog:post_share' post.id %}">
+                        <i class="b-icon text-primary text-decoration-none bi bi-share-fill"></i>
+                </a>
+                <a href="#comments">
+                    <i class="b-icon text-primary text-decoration-none bi bi-chat-text-fill"></i>
+                </a>
+            </p>
+
+            <hr class="my-5">
+            <div id="comments">
+                {% with comments.count as total_comments %}
+                <h2>
+                    {{ total_comments }}
+                    comment{{ total_comments|pluralize }}
+                </h2>
+                {% endwith %}
+                {% for comment in comments %}
+                <div class="comment">
+                    <p class="info">
+                        Comment {{ forloop.counter }} by {{ comment.name }} {{ comment.creaetd }}
+                    </p>
+                    {{ comment.body|linebreaks }}
+                </div>
+                {% empty %}
+                <p>
+                    There are no comments.
+                </p>
+                {% endfor %}
+                {% include 'blog/post/includes/comment_form.html' %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-12 p-3">
+        <div class="bg-white rounded p-3 pb-5">
+            <form class="d-flex" role="search">
+                <input class="form-control mb-4" type="search" placeholder="Search" aria-label="Search"/>
+            </form>
+
+            <!-- Recent Posts -->
+            {% include "blog/post/includes/recent_posts.html" %}
+        </div>
+    </div>
+</div>
+{% endblock content %}
