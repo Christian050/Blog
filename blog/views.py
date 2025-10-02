@@ -3,8 +3,10 @@ from django.views.generic import ListView
 from django.shortcuts import get_object_or_404, render
 from django.core.mail import send_mail
 from django.views.decorators.http import require_POST
+from django.db.models import Count
 from .models import Post
 from .forms import CommentForm, EmailPostForm
+from taggit.models import Tag
 
 # Create your views here.
 
@@ -18,9 +20,14 @@ class PostListView(ListView):
     template_name = 'blog/post/list.html'
 
 
-def post_list(request):
+def post_list(request, tag_slug=None):
     # Display the posts from the django admin site
     post_list = Post.published.all()
+    tag = None
+    # Display tag if tag in post
+    if tag_slug:
+        tag = get_object_or_404(Tag, slug=tag_slug)
+        post_list = post_list.filter(tags__in=[tag])
     # Pagination with 3 posts per page
     paginator = Paginator(post_list, 3)
     # Display page number & set default to 1
@@ -28,17 +35,15 @@ def post_list(request):
     try:
         # Display posts.
         posts = paginator.page(page_number)
-        
     # Display first page if page is not an integer
     except PageNotAnInteger:
         posts = paginator.page(1)
-
     # Display last page if page is out of range
     except EmptyPage:
         posts = paginator.page(paginator.num_pages)
-    
+        
     # Pass to list.html
-    return render(request, 'blog/post/list.html', {'posts': posts})
+    return render(request, 'blog/post/list.html', {'posts': posts, 'tag': tag })
 
 
 # Display post details on the address bar.
@@ -48,8 +53,13 @@ def post_detail(request, year, month, day, post):
     comments = post.comments.filter(active=True)
     # Form for users to comment
     form = CommentForm()
+    # List similar posts
+    post_tags_ids = post.tags.values_list('id', flat=True)
+    similar_posts = Post.published.filter(tags__in=post_tags_ids).exclude(id=post.id)
+    similar_posts = similar_posts.annotate(same_tags=Count('tags')).order_by('same_tags', '-publish')[:4]
+    
     # Pass to detail.html
-    return render(request, 'blog/post/detail.html', {'post': post, 'comments': comments, 'form': form})
+    return render(request, 'blog/post/detail.html', {'post': post, 'comments': comments, 'form': form, 'similar_posts': similar_posts })
 
 
 def post_share(request, post_id):
@@ -64,15 +74,15 @@ def post_share(request, post_id):
             cd = form.cleaned_data
             post_url = request.build_absolute_uri(post.get_absolute_url())
             subject = (f"{cd['name']} ({cd['email']})" f" recommends you read {post.title}")
-            message = (f"Read {post.title} at {post.url}\n\n" f"{cd['name']}\'s comments: {cd['comments']}")
+            message = (f"Read {post.title} at {post_url}\n\n" f"{cd['name']}\'s comments: {cd['comments']}")
             send_mail(subject=subject, message=message, from_email=None, recipient_list=[cd['to']])
             sent = True
-        else:
-            # send email
-            form = EmailPostForm()
+    else:
+        # Send email
+        form = EmailPostForm()
             
-        # Pass to share.html
-        return render(request, 'blog/post/share.html', {'post': post, 'form': form, 'sent': sent})
+    # Pass to share.html
+    return render(request, 'blog/post/share.html', {'post': post, 'form': form, 'sent': sent})
 
 
 
@@ -90,7 +100,8 @@ def post_comment(request, post_id):
         comment.post = post
         # Save the comment to the database
         comment.save()
-    return render(request, 'blog/post.comment.html', {'post': post, 'form': form, 'comment': comment})
+        
+    return render(request, 'blog/post/comment.html', {'post': post, 'form': form, 'comment': comment })
 
 
 # log

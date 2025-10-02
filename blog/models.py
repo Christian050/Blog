@@ -2,18 +2,17 @@ from django.conf import settings
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
+from taggit.managers import TaggableManager
 
 # Create your models here.
 
 # Set Default Order Published
 class PublishedManager(models.Manager):
-    
     def get_queryset(self):
         return super().get_queryset().filter(status = Post.Status.PUBLISHED)
 
 # Custom Draft Manager Default Order (Unused)
 class DraftManager(models.Manager):
-    
     def get_queryset(self):
         return super().get_queryset().filter(status = Post.Status.DRAFT)
 
@@ -35,6 +34,7 @@ class Post(models.Model):
     objects = models.Manager()  # Default manager
     published = PublishedManager()  # Custom manager
     draft = DraftManager()  # Custom draft manager
+    tags = TaggableManager()
 
     # Display by Latest Published in Meta
     class Meta:
